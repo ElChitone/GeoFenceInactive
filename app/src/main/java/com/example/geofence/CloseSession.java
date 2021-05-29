@@ -46,9 +46,9 @@ public class CloseSession extends AppCompatActivity {
         startTime = System.currentTimeMillis();
     }
     /*  MÉTODO START
-    *   Este metodo nos ayuda inicializando el ScreenReciver, creando el hilo de inactividad
-    *   Inicializa las variables de geofencingclient, con el cliente actual de las vallas
-    *
+    *   Este metodo inicia el hilo, y el screen reciever, aparte inicializa al manejador de las
+    *   geovallas y a al cliente de estas, ejecuta el metodo para activar la ubicacion del usuario
+    *   tambien inicializa el manejador de notificaciones
     */
     protected void start(){
         new ScreenReceiver();
@@ -56,29 +56,55 @@ public class CloseSession extends AppCompatActivity {
         geofencingClient = LocationServices.getGeofencingClient(this);
         geofenceHelper = new GeofenceHelper(this);
         enableUserLocation();
-        addGeofence(ubi, 30,"GEOFENCE_FROM_SUPERCLASS");
         notificationHelper = new NotificationHelper(CloseSession.this);
     }
 
-    @Override
+    /* METODO SENDHIGHPRIORITYNOTIFICATION
+    *  Metodo que manda a pantalla una notificación por medio del manejador de notificaciones
+    * */
+    public void sendHighPriorityNotification(String title, String body) {
+        notificationHelper.sendHighPriorityNotification(title,body,CloseSession.class);
+    }
+
+    /* METODO ONUSERINTERACTION
+    *  Método que detecta la interaccion del usuario y almacena el timepo de
+    *  Su ultima interacción en la variable definida para esto
+    * */
+        @Override
     public void onUserInteraction() {
         super.onUserInteraction();
         startTime = System.currentTimeMillis();
     }
 
+    /* METODO ONPAUSE
+    *  Este metodo sobre escribe el metodo normal de onPause(), primero manda a llamar a el metodo
+    *  onPause() del padre, y cambia el valor de la variable que usamos como bandera a true
+    *  avisando que la aplicacion está en segundo plano
+    * */
     @Override
     protected void onPause() {
         super.onPause();
         isForeGround = true;
     }
 
+    /* METODO RUNTHREAD
+    *  Explicacion general: Metodo que permite ver si el usuario está inactivo o no
+    * */
     private void runThread() {
+        //Se crea un nuevo hilo
         new Thread() {
+            //Se escribe su método run, necesario para que el hilo funcione
             public void run() {
                 while(true){
                     try {
+                        //El Hilo tendrá que correr en el hilo de la interfaz de usario para poder
+                        //Mandar notificaciones
                         runOnUiThread(() -> {
+                            //Se manda a llamar al metodo setLastInteractiontime
                             setLastInteractionTime();
+                            //Se comprueba si la pantalla está apagada o si el tiempo sin
+                            //interaccion del usuario es mayor a 15 segundos (15*1000) o si la
+                            //Aplicacion esta en segundo plano
                             if(isScreenOff || getLastInteractionTime() > 15000 || isForeGround){
                                 //...... means USER has been INACTIVE over a period of
                                 // and you do your stuff like log the user out
@@ -130,15 +156,6 @@ public class CloseSession extends AppCompatActivity {
                         FINE_LOCATION_ACCESS_REQUEST_CODE );
             }
         }
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-        if (intent.getBooleanExtra("Close",false))
-            finish();
-        else if(intent.getBooleanExtra("Change",false))
-            isChanged = true;
     }
 
   protected void addGeofence(LatLng latLng, float radius,String id){
