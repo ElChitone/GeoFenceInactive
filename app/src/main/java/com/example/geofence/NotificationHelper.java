@@ -9,16 +9,20 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-
 import java.util.Random;
 
+/** CLASE NOTIFICATION HELPER
+ *  Esta es una clase auxiliar la cual nos permite crear y mandar notificaciones
+ */
 public class NotificationHelper extends ContextWrapper {
-    private static final String TAG = "NotificationHelper";
 
+    /** Metodo Constructor
+     * Este constructor es el constructor por default, este verifica la version instalada en el
+     * Dispositivo, y dependiendo de la version creará o no los canales
+     */
     public NotificationHelper(Context base) {
         super(base);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -26,9 +30,15 @@ public class NotificationHelper extends ContextWrapper {
         }
     }
 
+    /** Crea el nombre y el id del canal */
     private String CHANNEL_NAME = "High priority channel";
     private String CHANNEL_ID = "com.example.notifications" + CHANNEL_NAME;
 
+    /** METODO CRATECHANELS
+     *  Metodo que ayuda a crear una serie de configuracione para las notificaciones, desde su
+     *  Importancia hasta el color de luz, si vibrará o no etc.
+     *  Este metodo solo se ejecutará si la version del api es superior a la 26 (Android 8)
+     */
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void createChannels() {
         NotificationChannel notificationChannel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
@@ -41,6 +51,9 @@ public class NotificationHelper extends ContextWrapper {
         manager.createNotificationChannel(notificationChannel);
     }
 
+    /** METODO SENDHIGHPRIORITYNOTIFICATION
+     *  Este metodo funciona para mandar una notiicacion al usuario con un nivel de prioridad alta.
+     */
     public void sendHighPriorityNotification(String title, String body, Class activityName) {
 
         Intent intent = new Intent(this, activityName);
